@@ -13,13 +13,17 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
 print("Imported all libraries successfully!")
 
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example for CAE')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=19, metavar='N',
                     help='number of epochs to train (default: 2)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -59,7 +63,7 @@ class CAE(nn.Module):
 
 		self.relu = nn.ReLU()
 		self.sigmoid = nn.Sigmoid()
-		self.c = 0
+
 
 	def encoder(self, x):
 		h1 = self.relu(self.fc1(x.view(-1, 784)))
@@ -75,7 +79,7 @@ class CAE(nn.Module):
 		return h1, h2
 
 		# Writing data in a grid to check the quality and progress
-	def samples_write(self, x):
+	def samples_write(self, x, epoch):
 		_, samples = self.forward(x)
 		#pdb.set_trace()
 		samples = samples.data.cpu().numpy()[:16]
@@ -91,8 +95,8 @@ class CAE(nn.Module):
 			plt.imshow(sample.reshape(28, 28), cmap='Greys_r')
 		if not os.path.exists('out/'):
 			os.makedirs('out/')
-		plt.savefig('out/{}.png'.format(str(self.c).zfill(3)), bbox_inches='tight')
-		self.c += 1
+		plt.savefig('out/{}.png'.format(str(epoch).zfill(3)), bbox_inches='tight')
+		#self.c += 1
 		plt.close(fig)
 
 
@@ -153,10 +157,11 @@ def train(epoch):
 				epoch, idx*len(data), len(train_loader.dataset), 
 				100*idx/len(train_loader),
 				loss.data[0]/len(data)))
-			model.samples_write(data)
+			
 
-		print('====> Epoch: {} Average loss: {:.4f}'.format(
-			epoch, train_loss / len(train_loader.dataset)))
+	print('====> Epoch: {} Average loss: {:.4f}'.format(
+		epoch, train_loss / len(train_loader.dataset)))
+	model.samples_write(data,epoch)
 
 for epoch in range(args.epochs):
 	train(epoch)
