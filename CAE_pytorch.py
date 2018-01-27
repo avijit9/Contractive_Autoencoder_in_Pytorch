@@ -99,7 +99,7 @@ class CAE(nn.Module):
 
 mse_loss = nn.BCELoss(size_average = False)
 
-def loss_function(W, x, recons_x, h, lbda=1.0):
+def loss_function(W, x, recons_x, h, lam):
     """Compute the Contractive AutoEncoder Loss
 
     Evalutes the CAE loss, which is composed as the summation of a Mean
@@ -118,7 +118,7 @@ def loss_function(W, x, recons_x, h, lbda=1.0):
           N_batch x N.
         `h` (Variable): the hidden units of the network, with dims
           batch_size x N_hidden
-        `lbda` (float): the weight given to the jacobian regulariser term
+        `lam` (float): the weight given to the jacobian regulariser term
 
     Returns:
         Variable: the (scalar) CAE loss
@@ -160,7 +160,7 @@ def train(epoch):
         # (In future I will try to make it automatic)
         W = model.state_dict()['fc1.weight']
         loss = loss_function(W, data.view(-1, 784), recons_x,
-                             hidden_representation)
+                             hidden_representation, lam)
 
         loss.backward()
         train_loss += loss.data[0]
